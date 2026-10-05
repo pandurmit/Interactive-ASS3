@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Assignment 3</title>
+
+    <link rel="stylesheet" href="reset.css">
+
+</head>
+<body>
+    <div id="box">
+  <h1>Put Your Headphones On</h1>
+
+  <div id="stage">
+    <div id="shelf">
+      <p class="shelf-label">Shelf</p>
+      <img id="headphones" src="Assets/img/headphone.png">
+    </div>
+
+    <img id="person" src="Assets/img/sad.png">
+  </div>
+
+  <div id="status" aria-live="polite">He's sad. He has no headphones.</div>
+  <p id="hint" class="info">&nbsp;</p>
+
+  <!-- the click action -->
+  <button id="on-button">Put headphones on</button>
+  <button id="off-button">Take headphones off</button>
+</div>
+
+<script>
+  // --getting the elements --
+  var headphones = document.getElementById("headphones");
+  var person = document.getElementById("person");
+  var statusText = document.getElementById("status");
+  var hint = document.getElementById("hint");
+  var stage = document.getElementById("stage");
+  var onButton = document.getElementById("on-button");
+  var offButton = document.getElementById("off-button");
+
+  var isWearing = false;  // is he wearing the headphones?
+
+  // -- the click --
+  // One button puts the headphones on and the other button takes them off.
+  onButton.addEventListener("click", function() {
+    if (isWearing) {
+      hint.innerHTML = "He's already wearing them!";
+    } else {
+      putOn();
+      hint.innerHTML = "&nbsp;";
+    }
+  });
+
+  offButton.addEventListener("click", function() {
+    if (isWearing == false) {
+      hint.innerHTML = "He isn't wearing them!";
+    } else {
+      takeOff();
+      hint.innerHTML = "&nbsp;";
+    }
+  });
+
+  // -- double click (dblclick) --
+  // double clicking the headphones puts them on, and double clicking the person takes them off. it's a shortcut for 
+  // people who try clicking the pictures.
+  headphones.addEventListener("dblclick", function() {
+    putOn();
+    hint.innerHTML = "&nbsp;";
+  });
+
+  person.addEventListener("dblclick", function() {
+    if (isWearing) {
+      takeOff();
+      hint.innerHTML = "&nbsp;";
+    }
+  });
+
+  // -- stopPropagation --
+  // a single click on the headphones tells you to double click them.
+  // stopPropagation() stops this click from "bubbling up" to the stage, so the stage's tip below doesn't show instead.
+  headphones.addEventListener("click", function(event) {
+    event.stopPropagation();
+    hint.innerHTML = "Tip: double click the headphones (or use the buttons).";
+  });
+
+  // clicking anywhere else inside the picture frame shows a tip
+  stage.addEventListener("click", function() {
+    hint.innerHTML = "Tip: use the buttons below.";
+  });
+
+  // -- preventDefault --
+  // when you double click, the browser normally highlights the picture, and you can also drag images by accident. 
+  // preventDefault() on mousedown stops the browser doing that.
+  headphones.addEventListener("mousedown", function(event) {
+    event.preventDefault();
+  });
+
+  person.addEventListener("mousedown", function(event) {
+    event.preventDefault();
+  });
+
+
+  // -- putting on / taking off --
+  // just swapping the pictures and change the text
+  function putOn() {
+    isWearing = true;
+    person.src = "Assets/img/happy.png";    // happy picture (with headphones)
+    headphones.style.visibility = "hidden"; // headphones are gone from the shelf
+    statusText.innerHTML = "He's happy! He's wearing his headphones.";
+  }
+
+  function takeOff() {
+    isWearing = false;
+    person.src = "Assets/img/sad.png";          // back to the sad picture
+    headphones.style.visibility = "visible";    // headphones are back on the shelf
+    statusText.innerHTML = "He's sad. He has no headphones.";
+  }
+
+  /*
+    REFLECTION - using this in a bigger project
+
+    Good things:
+    - Clicking is really easy, so anyone can use it straight away. A tap
+      on a phone counts as a click, so it works on phones and laptops
+      without any extra code.
+    - Using my own drawings makes it look more personal than shapes made
+      with CSS, and swapping pictures is really simple code.
+    - It could be used on a headphone shop website, where you click a
+      "try on" button under each pair of headphones to see them on a
+      model before buying.
+
+    Challenges:
+    - Clicking a button is less "real" than dragging the headphones onto
+      his head, so it might feel less fun. But it's simpler and more
+      people can use it.
+    - Every new item (like a hat or glasses) would need new drawings for
+      every combination, which would be a lot of pictures.
+    - The pictures have to be in the "images" folder next to this file,
+      or they won't show up.
+    - Double click doesn't really exist on phones (a double tap usually
+      zooms in), so phone users would have to use the buttons.
+    - The positions are in pixels, so it might not fit on a small phone
+      screen. I'd need to make it responsive.
+  */
+</script>
+</body>
+</html>
