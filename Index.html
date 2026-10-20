@@ -11,20 +11,30 @@
 <body>
     <div id="box">
   <h1>Put Your Headphones On</h1>
+  <p class="info">Pick a pair of headphones and try them on!</p>
+
+  <ul id="how-to">
+    <li><b>Click</b> a pair to choose it</li>
+    <li><b>Right click</b> a pair to see info about it</li>
+    <li><b>Right click</b> the person to take them off</li>
+  </ul>
 
   <div id="stage">
     <div id="shelf">
       <p class="shelf-label">Shelf</p>
-      <img id="headphones" src="Assets/img/headphone.png">
+      <img class="pair selected" data-colour="red" src="Assets/img/headphones-red.png" alt="Red headphones">
+      <img class="pair" data-colour="green" src="Assets/img/headphones-green.png" alt="Green headphones">
+      <img class="pair" data-colour="yellow" src="Assets/img/headphones-yellow.png" alt="Yellow headphones">
     </div>
 
-    <img id="person" src="Assets/img/sad.png">
+    <img id="person" src="Assets/img/sad.png" alt="A sad person with no headphones">
   </div>
 
   <div id="status" aria-live="polite">He's sad. He has no headphones.</div>
-  <p id="hint" class="info">&nbsp;</p>
+  <p id="hint" class="info">Selected: Red headphones</p>
+  <div id="info-box"></div>
 
-  <!-- the click action -->
+  <!-- the buttons -->
   <button id="on-button">Put headphones on</button>
   <button id="off-button">Take headphones off</button>
 </div>
@@ -39,61 +49,71 @@
   var onButton = document.getElementById("on-button");
   var offButton = document.getElementById("off-button");
 
-  var isWearing = false;  // is he wearing the headphones?
+  // querySelectorAll gets ALL the headphones on the shelf (all 3)
+  var pairs = document.querySelectorAll(".pair");
 
-  // -- the click --
-  // One button puts the headphones on and the other button takes them off.
-  onButton.addEventListener("click", function() {
-    if (isWearing) {
-      hint.innerHTML = "He's already wearing them!";
-    } else {
+  var selectedColour = "red";  // which pair is chosen
+  var wearingColour = "";      // which pair he's wearing ("" = none)
+
+  // info about each pair (shows when you right click it)
+  var pairInfo = {
+    red: "Red headphones - the classic. Bright and loud!",
+    green: "Green headphones - calm and chill, good for studying.",
+    yellow: "Yellow headphones - sunny and happy, good for a road trip."
+  };
+
+  // ---------- EVENTS ON EACH PAIR OF HEADPHONES ----------
+  // there are 3 pairs, so I use a for loop to give each one the same events
+  for (var i = 0; i < pairs.length; i++) {
+    var pair = pairs[i];
+
+    // LEFT CLICK: choose this pair
+    pair.addEventListener("click", function(event) {
+      // stopPropagation stops the click "bubbling up" to the stage,
+      // so the stage's tip doesn't show as well
+      event.stopPropagation();
+      selectPair(this.dataset.colour);
+
+      // if he's already wearing headphones, swap to this pair
+      if (wearingColour != "") {
+        putOn();
+      }
+    });
+
+    // DOUBLE CLICK: put this pair on straight away
+    pair.addEventListener("dblclick", function(event) {
+      event.stopPropagation();
+      selectPair(this.dataset.colour);
       putOn();
-      hint.innerHTML = "&nbsp;";
-    }
-  });
+    });
 
-  offButton.addEventListener("click", function() {
-    if (isWearing == false) {
-      hint.innerHTML = "He isn't wearing them!";
+    // RIGHT CLICK: show info about this pair.
+    // "contextmenu" is the event for the right mouse button.
+    pair.addEventListener("contextmenu", function(event) {
+      event.preventDefault();   // stops the browser's own right click menu
+      event.stopPropagation();
+      infoBox.innerHTML = pairInfo[this.dataset.colour];
+      infoBox.style.display = "block";
+    });
+
+    // stop double click from highlighting or dragging the picture
+    pair.addEventListener("mousedown", function(event) {
+      event.preventDefault();
+    });
+  }
+
+
+  // ---------- EVENTS ON THE PERSON ----------
+
+  // RIGHT CLICK the person: take the headphones off
+  person.addEventListener("contextmenu", function(event) {
+    event.preventDefault();     // stops the browser's own right click menu
+    event.stopPropagation();
+    if (wearingColour == "") {
+      hint.innerHTML = "He isn't wearing any headphones!";
     } else {
       takeOff();
-      hint.innerHTML = "&nbsp;";
     }
-  });
-
-  // -- double click (dblclick) --
-  // double clicking the headphones puts them on, and double clicking the person takes them off. it's a shortcut for 
-  // people who try clicking the pictures.
-  headphones.addEventListener("dblclick", function() {
-    putOn();
-    hint.innerHTML = "&nbsp;";
-  });
-
-  person.addEventListener("dblclick", function() {
-    if (isWearing) {
-      takeOff();
-      hint.innerHTML = "&nbsp;";
-    }
-  });
-
-  // -- stopPropagation --
-  // a single click on the headphones tells you to double click them.
-  // stopPropagation() stops this click from "bubbling up" to the stage, so the stage's tip below doesn't show instead.
-  headphones.addEventListener("click", function(event) {
-    event.stopPropagation();
-    hint.innerHTML = "Tip: double click the headphones (or use the buttons).";
-  });
-
-  // clicking anywhere else inside the picture frame shows a tip
-  stage.addEventListener("click", function() {
-    hint.innerHTML = "Tip: use the buttons below.";
-  });
-
-  // -- preventDefault --
-  // when you double click, the browser normally highlights the picture, and you can also drag images by accident. 
-  // preventDefault() on mousedown stops the browser doing that.
-  headphones.addEventListener("mousedown", function(event) {
-    event.preventDefault();
   });
 
   person.addEventListener("mousedown", function(event) {
@@ -101,20 +121,81 @@
   });
 
 
-  // -- putting on / taking off --
-  // just swapping the pictures and change the text
-  function putOn() {
-    isWearing = true;
-    person.src = "Assets/img/happy.png";    // happy picture (with headphones)
-    headphones.style.visibility = "hidden"; // headphones are gone from the shelf
-    statusText.innerHTML = "He's happy! He's wearing his headphones.";
+  // ---------- THE BUTTONS ----------
+  onButton.addEventListener("click", function() {
+    if (wearingColour == selectedColour) {
+      hint.innerHTML = "He's already wearing those!";
+    } else {
+      putOn();
+    }
+  });
+
+  offButton.addEventListener("click", function() {
+    if (wearingColour == "") {
+      hint.innerHTML = "He isn't wearing any headphones!";
+    } else {
+      takeOff();
+    }
+  });
+
+
+  // ---------- clicking the empty part of the picture ----------
+  // shows a tip, and hides the info box
+  stage.addEventListener("click", function() {
+    hint.innerHTML = "Tip: click the headphones on the shelf.";
+    infoBox.style.display = "none";
+  });
+
+
+  // ---------- functions ----------
+
+  // puts the dashed box around the chosen pair
+  function selectPair(colour) {
+    selectedColour = colour;
+    for (var i = 0; i < pairs.length; i++) {
+      if (pairs[i].dataset.colour == colour) {
+        pairs[i].classList.add("selected");
+      } else {
+        pairs[i].classList.remove("selected");
+      }
+    }
+    hint.innerHTML = "Selected: " + capital(colour) + " headphones";
+    infoBox.style.display = "none";
   }
 
+  // puts the selected pair on him
+  function putOn() {
+    wearingColour = selectedColour;
+    person.src = "assets/img/happy-" + wearingColour + ".png";
+    person.alt = "A happy person wearing " + wearingColour + " headphones";
+    statusText.innerHTML = "He's happy! He's wearing the " + wearingColour + " headphones.";
+    updateShelf();
+  }
+
+  // takes the headphones off
   function takeOff() {
-    isWearing = false;
-    person.src = "Assets/img/sad.png";          // back to the sad picture
-    headphones.style.visibility = "visible";    // headphones are back on the shelf
+    wearingColour = "";
+    person.src = "assets/img/sad.png";
+    person.alt = "A sad person with no headphones";
     statusText.innerHTML = "He's sad. He has no headphones.";
+    hint.innerHTML = "Selected: " + capital(selectedColour) + " headphones";
+    updateShelf();
+  }
+
+  // hides the pair he's wearing from the shelf, shows the others
+  function updateShelf() {
+    for (var i = 0; i < pairs.length; i++) {
+      if (pairs[i].dataset.colour == wearingColour) {
+        pairs[i].style.visibility = "hidden";
+      } else {
+        pairs[i].style.visibility = "visible";
+      }
+    }
+  }
+
+  // makes the first letter a capital ("red" -> "Red")
+  function capital(word) {
+    return word.charAt(0).toUpperCase() + word.slice(1);
   }
 
   /*
